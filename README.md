@@ -1,73 +1,105 @@
-# React + TypeScript + Vite
+# Permit Application Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Simple full-stack MVP for permit application workflows.
 
-Currently, two official plugins are available:
+## Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+permit-app/
+  client/   # Vite + React + TypeScript
+  server/   # Express + TypeScript + SQLite
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Roles and Workflow
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Citizen flow**
+  - Create permit draft
+  - Submit draft for review
+- **Admin flow**
+  - View permits
+  - Filter by permit type
+  - Approve or reject submitted permits
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Status Lifecycle
+
+`draft -> submitted -> approved | rejected`
+
+Invalid transitions are blocked.
+
+## What Is Implemented
+
+### Backend (`server`)
+
+- Express REST API
+  - `POST /permits`
+  - `GET /permits?status=&permitType=`
+  - `PATCH /permits/:id/status`
+- SQLite persistence (`server/permits.db`)
+- DB bootstrap module (`server/db.js`) with table creation
+- Parameterized SQL queries for insert/select/update
+- Validation
+  - Required fields
+  - Allowed permit types:
+    - Electrical
+    - Paving
+    - Roofing
+    - Plumbing
+    - New Construction
+  - Allowed statuses and transition rules
+
+### Frontend (`client`)
+
+- Citizen page
+  - Controlled form fields
+  - Permit type dropdown
+  - Save draft action (POST)
+  - Submit application action (PATCH to `submitted`)
+  - Loading and error states
+- Admin dashboard
+  - Permit listing from API
+  - Filter by permit type
+  - Approve/Reject actions for submitted permits
+- Minimal in-app view toggle between Citizen and Admin pages
+
+### Tests
+
+- Minimal unit test setup with Vitest (server only)
+- Tests for core status business logic (`server/models/permitModel.test.ts`)
+
+## Run the App
+
+### Install dependencies
+
+```bash
+npm install
+npm --prefix client install
+npm --prefix server install
 ```
+
+### Start app (client + server)
+
+```bash
+npm run dev
+```
+
+- Client: `http://localhost:5173` (or next available port)
+- Server: `http://localhost:4000`
+
+## Build
+
+```bash
+npm run build
+```
+
+## Run Tests
+
+```bash
+cd server
+npm test
+```
+
+## Notes / Current Limitations
+
+- No authentication/authorization yet (Citizen/Admin is UI-level only)
+- No pagination/sorting on permit list yet
+- No route-level API integration tests yet (only unit tests for core logic)
